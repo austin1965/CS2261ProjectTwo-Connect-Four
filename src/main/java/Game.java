@@ -1,8 +1,10 @@
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
+import java.util.Stack;
 
 @Getter
 public class Game {
@@ -36,7 +38,10 @@ public class Game {
 
             this.makeMove(this.getPlayerOne().getColorSymbol());
             this.printBoard();
-            this.checkWinCondition();
+
+            if (this.checkWinCondition()) {
+                break;
+            }
 
 
             System.out.print("Please choose a column (0-" + this.getGameBoard().length + ") to drop the "
@@ -45,9 +50,11 @@ public class Game {
 
             this.makeMove(this.getPlayerTwo().getColorSymbol());
             this.printBoard();
-            this.checkWinCondition();
 
-            this.getPlayerOne().setWinStatus(true);
+            if(this.checkWinCondition()) {
+                break;
+            }
+
         }
     }
 
@@ -83,7 +90,7 @@ public class Game {
 
         for (int row = 0; row < this.getMAX_BOARD_LENGTH(); ++row) {
 
-            if (this.getGameBoard()[row][currentPlayer.getColumnChoice()] == this.getEMPTY_SYMBOL() && row > maxDepth) {
+            if (this.getGameBoard()[row][currentPlayer.getColumnChoice()].equals(this.getEMPTY_SYMBOL())  && row > maxDepth) {
                 maxDepth = row;
             }
         }
@@ -91,9 +98,64 @@ public class Game {
         this.getGameBoard()[maxDepth][currentPlayer.getColumnChoice()] = "" + currentPlayer.getColorSymbol();
     }
 
-    private void checkWinCondition() {
-        // FIXME: 6/30/2022 create logic for checking win condition.
-        System.out.println();
+    private boolean checkWinCondition() {
+        // FIXME: 6/30/2022 create logic for checking win conditions.
+
+        return this.checkHorizontalWin();
+    }
+
+    private boolean checkHorizontalWin() {
+        // FIXME: 7/1/2022 create logic for horizontal win
+
+
+        Stack<Character> characterStack = new Stack<Character>();
+        for (int row = 0; row < this.getMAX_BOARD_LENGTH(); ++row) {
+
+
+            for (int column = 0; column < this.getMAX_BOARD_WIDTH(); ++column) {
+
+                if (characterStack.size() >= 4) {
+                    return true;
+                }
+                else if ((!this.getGameBoard()[row][column].equals(this.getEMPTY_SYMBOL())
+                        && characterStack.isEmpty())) {
+                    characterStack.push(this.getGameBoard()[row][column].charAt(0));
+                }
+                else if (!characterStack.isEmpty()) {
+                    if (!this.getGameBoard()[row][column].equals("" + characterStack.peek())) {
+                        characterStack.removeAllElements();
+
+                        if (this.getGameBoard()[row][column].equals("" + this.getPlayerOne().getColorSymbol())
+                                || this.getGameBoard()[row][column].equals("" + this.getPlayerTwo().getColorSymbol())) {
+                            characterStack.push(this.getGameBoard()[row][column].charAt(0));
+                        }
+                    }
+                    else if (this.getGameBoard()[row][column].equals("" + characterStack.peek())) {
+                        characterStack.push(this.getGameBoard()[row][column].charAt(0));
+                    }
+                }
+            }
+
+            if (characterStack.size() >= 4) {
+                return true;
+            }
+            else {
+                characterStack.removeAllElements();
+            }
+
+
+        }
+
+        return false;
+
+    }
+
+    private void checkVerticalWin() {
+        // FIXME: 7/1/2022 create logic for horizontal win
+    }
+
+    private void checkDiagonalWin() {
+        // FIXME: 7/1/2022 create logic for diagonal win
     }
 
 }
