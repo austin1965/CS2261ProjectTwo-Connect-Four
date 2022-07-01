@@ -8,6 +8,7 @@ public class Player {
     private String color;
     private String userName;
     private boolean winStatus;
+    private int columnChoice;
 
     public Player(char colorSymbol, String color, String userName) {
         this.colorSymbol = colorSymbol;
