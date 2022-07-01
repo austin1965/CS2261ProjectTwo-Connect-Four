@@ -1,7 +1,6 @@
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
 import java.util.Stack;
@@ -39,7 +38,7 @@ public class Game {
             this.makeMove(this.getPlayerOne().getColorSymbol());
             this.printBoard();
 
-            if (this.checkWinCondition()) {
+            if (reviewGameStatus()) {
                 break;
             }
 
@@ -49,13 +48,28 @@ public class Game {
             this.getPlayerTwo().setColumnChoice(Integer.parseInt(scanner.next()));
 
             this.makeMove(this.getPlayerTwo().getColorSymbol());
-            this.printBoard();
 
-            if(this.checkWinCondition()) {
+            if (reviewGameStatus()) {
                 break;
             }
-
         }
+    }
+
+    private boolean reviewGameStatus() {
+        if (this.checkWinCondition()) {
+
+            if (this.getPlayerOne().isWinStatus()) {
+                System.out.println("Player " + this.getPlayerOne().getUserName() + " has won by connecting 4 "
+                        + this.getPlayerOne().getColor() + " pieces.");
+            }
+            else {
+                System.out.println("Player " + this.getPlayerTwo().getUserName() + " has won by connecting 4 "
+                        + this.getPlayerTwo().getColor() + " pieces.");
+            }
+
+            return true;
+        }
+        return false;
     }
 
     private void fillBoard() {
@@ -106,48 +120,58 @@ public class Game {
 
     private boolean checkHorizontalWin() {
         // FIXME: 7/1/2022 create logic for horizontal win
-
-
         Stack<Character> characterStack = new Stack<Character>();
+
+        // Look at every cell in game board.
         for (int row = 0; row < this.getMAX_BOARD_LENGTH(); ++row) {
-
-
             for (int column = 0; column < this.getMAX_BOARD_WIDTH(); ++column) {
 
+                // if mid-loop, we hit 4 or more in a row, end.
                 if (characterStack.size() >= 4) {
+                    this.determineWinner(characterStack);
                     return true;
                 }
+
+                // if space isn't empty and stack is empty, add item to stack.
                 else if ((!this.getGameBoard()[row][column].equals(this.getEMPTY_SYMBOL())
                         && characterStack.isEmpty())) {
                     characterStack.push(this.getGameBoard()[row][column].charAt(0));
                 }
+
+                // if stack isn't empty, examine further.
                 else if (!characterStack.isEmpty()) {
+
+                    // if the top item of the stack isn't equal to the current cell, empty it.
                     if (!this.getGameBoard()[row][column].equals("" + characterStack.peek())) {
                         characterStack.removeAllElements();
 
+                        // However, start the stack over if it's a player piece.
                         if (this.getGameBoard()[row][column].equals("" + this.getPlayerOne().getColorSymbol())
                                 || this.getGameBoard()[row][column].equals("" + this.getPlayerTwo().getColorSymbol())) {
                             characterStack.push(this.getGameBoard()[row][column].charAt(0));
                         }
                     }
+
+                    // if the top of the stack and the current cell match, put it on the stack
                     else if (this.getGameBoard()[row][column].equals("" + characterStack.peek())) {
                         characterStack.push(this.getGameBoard()[row][column].charAt(0));
                     }
                 }
             }
 
+            // Check if on the last iteration, we hit 4 or more elements.
             if (characterStack.size() >= 4) {
+                this.determineWinner(characterStack);
                 return true;
             }
+            // otherwise, empty the stack for the next row of horizontal checks
             else {
                 characterStack.removeAllElements();
             }
-
-
         }
 
+        // No wins currently present in board.
         return false;
-
     }
 
     private void checkVerticalWin() {
@@ -156,6 +180,15 @@ public class Game {
 
     private void checkDiagonalWin() {
         // FIXME: 7/1/2022 create logic for diagonal win
+    }
+
+    private void determineWinner(Stack<Character> winnerStack) {
+        if ((winnerStack.peek() == this.getPlayerOne().getColorSymbol())) {
+            this.getPlayerOne().setWinStatus(true);
+        }
+        else if (winnerStack.peek() == this.getPlayerTwo().getColorSymbol()) {
+            this.getPlayerTwo().setWinStatus(true);
+        }
     }
 
 }
