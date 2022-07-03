@@ -29,12 +29,7 @@ public class Game {
         this.printBoard();
         while (!getPlayerOne().isWinStatus() && !getPlayerTwo().isWinStatus()) {
 
-            System.out.print("Please choose a column (0-" + this.getGameBoard().length + ") to drop the "
-                    + this.getPlayerOne().getColor() + " disk: ");
-            // FIXME: 6/30/2022 add error handling for user input.
-            // FIXME: 6/30/2022 add check for full column.
-            this.getPlayerOne().setColumnChoice(Integer.parseInt(scanner.next()));
-
+            this.getUserInput(this.getPlayerOne().getColorSymbol());
             this.makeMove(this.getPlayerOne().getColorSymbol());
             this.printBoard();
 
@@ -42,10 +37,7 @@ public class Game {
                 break;
             }
 
-            System.out.print("Please choose a column (0-" + this.getGameBoard().length + ") to drop the "
-                    + this.getPlayerTwo().getColor() + " disk: ");
-            this.getPlayerTwo().setColumnChoice(Integer.parseInt(scanner.next()));
-
+            this.getUserInput(this.getPlayerTwo().getColorSymbol());
             this.makeMove(this.getPlayerTwo().getColorSymbol());
             this.printBoard();
             if (reviewGameStatus()) {
@@ -116,7 +108,10 @@ public class Game {
 
     private boolean winner() {
         // Potential directions
-        int[][] directions = {{1, 0}, {1, -1}, {1, 1}, {0, 1}};
+        int[][] directions = {{1, 0},
+                              {1, -1},
+                              {1, 1},
+                              {0, 1}};
 
         // Iterate through each direction
         for (int[] d : directions) {
@@ -172,4 +167,46 @@ public class Game {
 
         return boardFull;
     }
+
+    public void getUserInput(char playerChar) {
+        Player currentPlayer;
+        boolean gettingInput = true;
+        Scanner scanner = new Scanner(System.in);
+
+        if (playerChar == this.getPlayerOne().getColorSymbol()) {
+            currentPlayer = this.getPlayerOne();
+        }
+        else {
+            currentPlayer = this.getPlayerTwo();
+        }
+
+        while (gettingInput) {
+            try {
+                System.out.print("Please choose a column (0-" + this.getGameBoard().length + ") to drop the "
+                        + currentPlayer.getColor() + " disk: ");
+                String userInput = scanner.nextLine();
+
+                if (!Character.isDigit(userInput.charAt(0)) || userInput.length() > 1) {
+                    throw new Exception("Input not numeric or too long.");
+                }
+
+                if (Integer.parseInt(userInput) < 0 || Integer.parseInt(userInput) > 6) {
+                    throw new Exception("Input not a valid column value. Must be within 0 and 6 inclusively.");
+                }
+
+                if (!this.getGameBoard()[0][Integer.parseInt(userInput)].equals(this.getEMPTY_SYMBOL())) {
+                    throw new Exception("Selected column full. Select a different one");
+                }
+
+                currentPlayer.setColumnChoice(Integer.parseInt(userInput));
+                gettingInput = false;
+            }
+            catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+        }
+
+    }
+
+
 }
