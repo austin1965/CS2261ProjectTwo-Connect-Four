@@ -1,11 +1,8 @@
-import javafx.scene.control.Cell;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
-import java.util.Stack;
 
 @Getter
 public class Game {
@@ -54,7 +51,10 @@ public class Game {
             if (reviewGameStatus()) {
                 break;
             }
-            // FIXME: 7/1/2022 Add check for full board tie scenario.
+
+            if (this.checkForTie()) {
+                break;
+            }
         }
     }
 
@@ -155,5 +155,21 @@ public class Game {
             }
         }
         return false; // no winner
+    }
+
+    private boolean checkForTie() {
+
+        boolean boardFull = true;
+
+        for (String[] row : this.getGameBoard()) {
+            for (String column: row) {
+                if (column.equals(this.getEMPTY_SYMBOL())) {
+                    boardFull = false;
+                    break;
+                }
+            }
+        }
+
+        return boardFull;
     }
 }
