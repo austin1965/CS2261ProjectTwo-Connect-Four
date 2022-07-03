@@ -59,13 +59,12 @@ public class Game {
     }
 
     private boolean reviewGameStatus() {
-        if (this.checkWinCondition()) {
+        if (this.winner()) {
 
             if (this.getPlayerOne().isWinStatus()) {
                 System.out.println("Player " + this.getPlayerOne().getUserName() + " has won by connecting 4 "
                         + this.getPlayerOne().getColor() + " pieces.");
-            }
-            else {
+            } else {
                 System.out.println("Player " + this.getPlayerTwo().getUserName() + " has won by connecting 4 "
                         + this.getPlayerTwo().getColor() + " pieces.");
             }
@@ -76,15 +75,15 @@ public class Game {
     }
 
     private void fillBoard() {
-        for (String[] row: this.getGameBoard()) {
+        for (String[] row : this.getGameBoard()) {
             Arrays.fill(row, EMPTY_SYMBOL);
         }
     }
 
     private void printBoard() {
         System.out.println(" 0 1 2 3 4 5 6 ");
-        for (String[] row: this.getGameBoard()) {
-            for (String gamePiece: row) {
+        for (String[] row : this.getGameBoard()) {
+            for (String gamePiece : row) {
                 System.out.print("|" + gamePiece);
             }
             System.out.println("|");
@@ -93,21 +92,20 @@ public class Game {
     }
 
     private void makeMove(char symbol) {
-        
+
         int maxDepth = 0;
 
         Player currentPlayer;
 
         if (this.getPlayerOne().getColorSymbol() == symbol) {
             currentPlayer = this.getPlayerOne();
-        }
-        else {
+        } else {
             currentPlayer = this.getPlayerTwo();
         }
 
         for (int row = 0; row < this.getMAX_BOARD_LENGTH(); ++row) {
 
-            if (this.getGameBoard()[row][currentPlayer.getColumnChoice()].equals(this.getEMPTY_SYMBOL())  && row > maxDepth) {
+            if (this.getGameBoard()[row][currentPlayer.getColumnChoice()].equals(this.getEMPTY_SYMBOL()) && row > maxDepth) {
                 maxDepth = row;
             }
         }
@@ -115,250 +113,47 @@ public class Game {
         this.getGameBoard()[maxDepth][currentPlayer.getColumnChoice()] = "" + currentPlayer.getColorSymbol();
     }
 
-    private boolean checkWinCondition() {
-        if (this.checkHorizontalWin()) {
-            return true;
-        }
-        else if (this.checkVerticalWin()) {
-            return true;
-        }
-        else {
-            return checkDiagonalWin();
-        }
-    }
 
-    private boolean checkHorizontalWin() {
-        Stack<Character> characterStack = new Stack<Character>();
+    private boolean winner() {
+        // Potential directions
+        int[][] directions = {{1, 0}, {1, -1}, {1, 1}, {0, 1}};
 
-        // Look at every cell in game board row-wise.
-        for (int row = 0; row < this.getMAX_BOARD_LENGTH(); ++row) {
-            for (int column = 0; column < this.getMAX_BOARD_WIDTH(); ++column) {
-                if (manageStackForAdjacentPieces(characterStack, row, column)) {
-                    return true;
-                }
-            }
+        // Iterate through each direction
+        for (int[] d : directions) {
+            int dRow = d[0];
+            int dColumn = d[1];
 
-            // Check if on the last iteration, we hit 4 or more elements.
-            if (characterStack.size() >= 4) {
-                this.determineWinner(characterStack);
-                return true;
-            }
-            // otherwise, empty the stack for the next row of horizontal checks
-            else {
-                characterStack.removeAllElements();
-            }
-        }
+            // Iterate through Each cell
+            for (int row = 0; row < this.getMAX_BOARD_LENGTH(); row++) {
+                for (int column = 0; column < this.getMAX_BOARD_WIDTH(); column++) {
+                    // Determine last rows
+                    int lastRow = row + 3 * dRow;
+                    int lastColumn = column + 3 * dColumn;
 
-        // No wins currently present in board.
-        return false;
-    }
+                    // If the calculated cell is in bounds, investigate further
+                    if (0 <= lastRow && lastRow < this.getMAX_BOARD_LENGTH()
+                            && 0 <= lastColumn && lastColumn < this.getMAX_BOARD_WIDTH()) {
 
-    private boolean checkVerticalWin() {
-        Stack<Character> characterStack = new Stack<Character>();
+                        String w = this.getGameBoard()[row][column];
 
-        // Look at every cell in the game board column-wise.
-        for (int column = 0; column < this.getMAX_BOARD_WIDTH(); ++column) {
-            for (int row = 0; row < this.getMAX_BOARD_LENGTH(); ++row) {
-                if (manageStackForAdjacentPieces(characterStack, row, column)) {
-                    return true;
-                }
-            }
-            // Check if on the last iteration, we hit 4 or more elements.
-            if (characterStack.size() >= 4) {
-                this.determineWinner(characterStack);
-                return true;
-            }
-            // otherwise, empty the stack for the next row of horizontal checks
-            else {
-                characterStack.removeAllElements();
-            }
-        }
-        return false;
-    }
+                        // If field not empty and all cells homogenous, then we have a winner.
+                        if (!w.equals(this.getEMPTY_SYMBOL()) && w.equals(this.getGameBoard()[row + dRow][column + dColumn])
+                                && w.equals(this.getGameBoard()[row + 2 * dRow][column + 2 * dColumn])
+                                && w.equals(this.getGameBoard()[lastRow][lastColumn])) {
 
-    private boolean manageStackForAdjacentPieces(Stack<Character> characterStack, int row, int column) {
-        // if mid-loop, we hit 4 or more in a row, end.
-        if (characterStack.size() >= 4) {
-            this.determineWinner(characterStack);
-            return true;
-        }
-
-        // if space isn't empty and stack is empty, add item to stack.
-        else if ((!this.getGameBoard()[row][column].equals(this.getEMPTY_SYMBOL())
-                && characterStack.isEmpty())) {
-            characterStack.push(this.getGameBoard()[row][column].charAt(0));
-        }
-
-        // if stack isn't empty, examine further.
-        else if (!characterStack.isEmpty()) {
-
-            // if the top item of the stack isn't equal to the current cell, empty it.
-            if (!this.getGameBoard()[row][column].equals("" + characterStack.peek())) {
-                characterStack.removeAllElements();
-
-                // However, start the stack over if it's a player piece.
-                if (this.getGameBoard()[row][column].equals("" + this.getPlayerOne().getColorSymbol())
-                        || this.getGameBoard()[row][column].equals("" + this.getPlayerTwo().getColorSymbol())) {
-                    characterStack.push(this.getGameBoard()[row][column].charAt(0));
-                }
-            }
-
-            // if the top of the stack and the current cell match, put it on the stack
-            else if (this.getGameBoard()[row][column].equals("" + characterStack.peek())) {
-                characterStack.push(this.getGameBoard()[row][column].charAt(0));
-            }
-        }
-        return false;
-    }
-
-    private boolean checkDiagonalWin() {
-        // FIXME: 7/1/2022 create logic for diagonal win
-
-        // Need dynamic list of stacks for unknown number of continuous stacks that could be winners across rows.
-        ArrayList<Stack<Cells>> cellStackHolder = new ArrayList<Stack<Cells>>();
-
-        // Check every cell
-        for (int row = 0; row < this.getMAX_BOARD_LENGTH(); ++row) {
-            for (int column = 0; column < this.getMAX_BOARD_WIDTH(); ++column) {
-
-                // Check if any of the stacks of cells meet the win condition
-                if (!cellStackHolder.isEmpty()) {
-                    for (Stack<Cells> cellsStack : cellStackHolder) {
-                        if (cellsStack.size() >= 4) {
-                            this.determineWinnerCells(cellsStack);
-                            return true;
-                        }
-                    }
-                }
-
-                // If the current game cell isn't empty, let's look further.
-                 if (!this.getGameBoard()[row][column].equals(this.getEMPTY_SYMBOL())) {
-
-                     // If there aren't any stacks yet, start one.
-                    if (cellStackHolder.isEmpty()) {
-                        addCellStack(cellStackHolder, row, column);
-                    }
-                    // If there are stacks, let's look further.
-                    else {
-
-                        // Check for existing stack for current player character piece
-                        boolean stackForCurrentChar = false;
-                        boolean isDiagonalToCell = false;
-                        for (Stack<Cells> cellsStack : cellStackHolder) {
-                            // If there is a stack for the current player char, let's look further
-                            if (cellsStack.peek().getPlayerChar() == this.getGameBoard()[row][column].charAt(0)) {
-                                stackForCurrentChar = true;
-
-                                // if the existing stack is diagonal to the current player char, add to stack
-                                if ((cellsStack.peek().getColumn() == (column + 1)
-                                        || cellsStack.peek().getColumn() == (column - 1)) && (cellsStack.peek().getRow() == (row - 1))) {
-                                    isDiagonalToCell = true;
-
-                                    int direction;
-
-                                    if ((cellsStack.peek().getColumn() == (column + 1))) {
-                                        direction = 1;
-                                    }
-                                    else {
-                                        direction = -1;
-                                    }
-
-
-
-                                    boolean isDiagonalToStack = true;
-                                    for (int cellIndex = 0; cellIndex < cellsStack.size(); ++cellIndex) {
-                                        if (cellsStack.get(cellIndex).getColumn() != (column + (cellIndex * direction) + direction) ) {
-                                            isDiagonalToStack = false;
-                                            break;
-                                        }
-                                    }
-
-                                    if (isDiagonalToStack) {
-                                        Cells newDiagonalCell = new Cells();
-                                        newDiagonalCell.setRow(row);
-                                        newDiagonalCell.setColumn(column);
-                                        newDiagonalCell.setPlayerChar(this.getGameBoard()[row][column].charAt(0));
-
-                                        cellsStack.push(newDiagonalCell);
-                                    }
-                                    else {
-                                        Cells cellOne = cellsStack.peek();
-                                        Cells cellTwo = new Cells();
-                                        cellTwo.setRow(row);
-                                        cellTwo.setColumn(column);
-                                        cellTwo.setPlayerChar(this.getGameBoard()[row][column].charAt(0));
-
-                                        Stack<Cells> newCellStack = new Stack<Cells>();
-                                        newCellStack.push(cellOne);
-                                        newCellStack.push(cellTwo);
-                                        cellStackHolder.add(newCellStack);
-                                    }
-
-                                }
+                            // Determine winner
+                            if (w.equals("" + this.getPlayerOne().getColorSymbol())) {
+                                this.getPlayerOne().setWinStatus(true);
+                            } else if (w.equals("" + this.getPlayerTwo().getColorSymbol())) {
+                                this.getPlayerTwo().setWinStatus(true);
                             }
-                        }
 
-                        // create new stack if none exists for the current player char or this one isn't diagonal to an existing one.
-                        if (!stackForCurrentChar || !isDiagonalToCell) {
-                            addCellStack(cellStackHolder, row, column);
+                            return true; // Winner
                         }
                     }
                 }
             }
-
-            // Check if any of the stacks of cells meet the win condition
-            if (!cellStackHolder.isEmpty()) {
-
-                Stack<Integer> indexList = new Stack<Integer>();
-                for (int cellStack = 0; cellStack < cellStackHolder.size(); ++cellStack) {
-                    if (cellStackHolder.get(cellStack).size() >= 4) {
-                        this.determineWinnerCells(cellStackHolder.get(cellStack));
-                        return true;
-                    } else if ((cellStackHolder.get(cellStack).peek().getRow() - row) != 0) {
-                        indexList.push(cellStack);
-                    }
-
-                }
-
-                while (!indexList.isEmpty()) {
-                    cellStackHolder.remove(indexList.pop().intValue());
-                }
-
-            }
-
-
         }
-
-
-        return false;
+        return false; // no winner
     }
-
-    private void addCellStack(ArrayList<Stack<Cells>> cellStackHolder, int row, int column) {
-        Stack<Cells> cellsStack = new Stack<Cells>();
-        Cells cell = new Cells();
-        cell.setRow(row);
-        cell.setColumn(column);
-        cell.setPlayerChar(this.getGameBoard()[row][column].charAt(0));
-        cellsStack.push(cell);
-        cellStackHolder.add(cellsStack);
-    }
-
-    private void determineWinner(Stack<Character> winnerStack) {
-        if ((winnerStack.peek() == this.getPlayerOne().getColorSymbol())) {
-            this.getPlayerOne().setWinStatus(true);
-        }
-        else if (winnerStack.peek() == this.getPlayerTwo().getColorSymbol()) {
-            this.getPlayerTwo().setWinStatus(true);
-        }
-    }
-
-    private void determineWinnerCells(Stack<Cells> winnerStack) {
-        if (winnerStack.peek().getPlayerChar() == this.getPlayerOne().getColorSymbol()) {
-            this.getPlayerOne().setWinStatus(true);
-        }
-        else if (winnerStack.peek().getPlayerChar() == this.getPlayerTwo().getColorSymbol()) {
-            this.getPlayerTwo().setWinStatus(true);
-        }
-    }
-
 }
